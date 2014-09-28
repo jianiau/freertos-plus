@@ -5,45 +5,52 @@
 
 void osDbgPrintf(const char * format, ...) {
 
-	int i;
+	int i,p;
 
 	va_list v1;
 	va_start(v1, format);
 
 	int tmpint;
 	char *tmpcharp;
+	char dest[500];
 
-	for(i=0; format[i]; ++i){
+
+	for(i=0,p=0; format[i]; ++i){
 		if(format[i]=='%'){
 			switch(format[i+1]){
 				case '%':
-					 break;
+					dest[p++]='%'; break;
+					break;
 				case 'x':
 				case 'X':
 					tmpint = va_arg(v1, int);
 					tmpcharp = utoa(format[i+1]=='x'?"0123456789abcdef":"0123456789ABCDEF",(unsigned)tmpint, 16);
-					host_action (SYS_WRITE,1,tmpcharp,strlen(tmpcharp));
+					for(;*tmpcharp;++tmpcharp, ++p)
+						dest[p]=*tmpcharp;
 					break;
 				case 'u':
-					tmpint = va_arg(v1, int);
-					tmpcharp = utoa("0123456789",(unsigned)tmpint, 10);
-					host_action (SYS_WRITE,1,tmpcharp,strlen(tmpcharp));
-					break;
 				case 'd':
 					tmpint = va_arg(v1, int);
-					tmpcharp = itoa(format[i+1]=='x'?"0123456789abcdef":"0123456789ABCDEF", tmpint, format[i+1]=='d'?10: 16);
-					host_action (SYS_WRITE,1,tmpcharp,strlen(tmpcharp));
+					if (format[i+1]=='u')
+						tmpcharp = utoa("0123456789",(unsigned)tmpint, 10);
+					else
+						tmpcharp = itoa("0123456789",(unsigned)tmpint, 10);
+					for(;*tmpcharp;++tmpcharp, ++p)
+						dest[p]=*tmpcharp;
 					break;
 				case 's':
 					tmpcharp = va_arg(v1, char *);
-					host_action (SYS_WRITE,1,tmpcharp,strlen(tmpcharp));
+					for(;*tmpcharp;++tmpcharp, ++p)
+						dest[p]=*tmpcharp;
 					break;
 			}
 			/* Skip the next character */
 			++i;
 		}else
-			host_action (SYS_WRITE,1,format+i,1);
+			dest[p++]=format[i];
 	}
-
+	
 	va_end(v1);
+	dest[p]='\0';
+	host_action (SYS_WRITE0,dest);	
 }
