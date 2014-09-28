@@ -93,17 +93,20 @@ void command_prompt(void *pvParameters)
 
 	fio_printf(1, "\rWelcome to FreeRTOS Shell\r\n");
 	while(1){
-                fio_printf(1, "%s", hint);
+		fio_printf(1, "%s", hint);
 		fio_read(0, buf, 127);
 	
 		int n=parse_command(buf, argv);
 
 		/* will return pointer to the command function */
+		//if (*argv[0]=='\0')
 		cmdfunc *fptr=do_command(argv[0]);
 		if(fptr!=NULL)
 			fptr(n, argv);
-		else
+		else if (*argv[0]!='\0')
 			fio_printf(2, "\r\n\"%s\" command not found.\r\n", argv[0]);
+		else
+			fio_printf(1, "\r\n");
 	}
 
 }
