@@ -20,6 +20,7 @@ const hostcmdlist hcl[23]={
     [SYS_OPEN] = MKHCL(SYS_OPEN, open),
     [SYS_CLOSE] = MKHCL(SYS_CLOSE, close),
     [SYS_WRITE] = MKHCL(SYS_WRITE, write),
+    [SYS_WRITE0] = MKHCL(SYS_WRITE, write0),
     [SYS_SYSTEM] = MKHCL(SYS_SYSTEM, system),
 };
 
@@ -39,6 +40,8 @@ int host_call(enum HOST_SYSCALL action, void *argv)
     );
     return result;
 }
+
+
 
 int host_system(va_list v1){
     char *tmpChrPtr;
@@ -60,6 +63,10 @@ int host_close(va_list v1) {
 
 int host_write(va_list v1) {
     return host_call(SYS_WRITE, (param []){{.pdInt=va_arg(v1, int)}, {.pdPtr=va_arg(v1, void *)}, {.pdInt=va_arg(v1, int)}});
+}
+
+int host_write0(va_list v1){
+	return host_call(SYS_WRITE0, va_arg(v1, char *));
 }
 
 int host_action(enum HOST_SYSCALL action, ...)
