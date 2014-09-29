@@ -22,6 +22,7 @@ const hostcmdlist hcl[23]={
     [SYS_WRITE] = MKHCL(SYS_WRITE, write),
     [SYS_WRITE0] = MKHCL(SYS_WRITE, write0),
     [SYS_SYSTEM] = MKHCL(SYS_SYSTEM, system),
+    [SYS_TIME] = MKHCL(SYS_CLOCK, time),
 };
 
 /*action will be in r0, and argv in r1*/
@@ -67,6 +68,10 @@ int host_write(va_list v1) {
 
 int host_write0(va_list v1){
 	return host_call(SYS_WRITE0, va_arg(v1, char *));
+}
+
+int host_time(va_list v1){
+	return host_call(SYS_TIME, 0);
 }
 
 int host_action(enum HOST_SYSCALL action, ...)

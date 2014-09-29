@@ -39,6 +39,7 @@ int host_open(va_list v1);
 int host_close(va_list v1);
 int host_write(va_list v1);
 int host_write0(va_list v1);
+int host_time(va_list v1);
 
 int host_action(enum HOST_SYSCALL action, ...);
 
