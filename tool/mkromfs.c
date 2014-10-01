@@ -12,10 +12,9 @@
 
 uint32_t hash_djb2(const uint8_t * str, uint32_t hash) {
     int c;
-
-    while ((c = *str++))
+    while ((c = *str++)) {
         hash = ((hash << 5) + hash) ^ c;
-
+    }
     return hash;
 }
 
@@ -25,6 +24,7 @@ void usage(const char * binname) {
 }
 
 void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * prefix) {
+
     char fullpath[1024];
     char buf[16 * 1024];
     struct dirent * ent;
@@ -55,6 +55,7 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
             rec_dirp = opendir(fullpath);
             processdir(rec_dirp, fullpath + strlen(prefix) + 1, outfile, prefix);
             closedir(rec_dirp);
+
         } else {
             hash = hash_djb2((const uint8_t *) ent->d_name, cur_hash);
             infile = fopen(fullpath, "rb");
@@ -92,21 +93,76 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
     }
 }
 
-void createind (DIR * dirp, const char * curpath,const char * prefix,FILE * indfile) {
+void createind (DIR * dirp, const char * curpath, const char * prefix,FILE * indfile) {
     char fullpath[1024];
-    char romfspath[1024];
-    char indpath[strlen(prefix)+7];
+    uint8_t b;
+
+    struct dirent **namelist;
+    int n;
+    uint32_t hash,size,ind_size;
     struct dirent * ent;
     DIR * rec_dirp;
+    fpos_t pos_size, pos_end;
+
+    hash = hash_djb2((const uint8_t *) curpath, hash_init);
+    //printf("mypath=%s\thash=%08X\n",curpath,hash);
+    strcpy(fullpath, prefix);
+    strcat(fullpath, "/");
+    strcat(fullpath, curpath);
+    n = scandir(fullpath, &namelist, NULL, alphasort);
+    //printf("pwd=/romfs/%s\n",curpath);
+
+    b = (hash >>  0) & 0xff;
+    fwrite(&b, 1, 1, indfile);
+    b = (hash >>  8) & 0xff;
+    fwrite(&b, 1, 1, indfile);
+    b = (hash >> 16) & 0xff;
+    fwrite(&b, 1, 1, indfile);
+    b = (hash >> 24) & 0xff;
+    fwrite(&b, 1, 1, indfile);
+
+    ind_size=0;
+    fgetpos(indfile, &pos_size);
+    fwrite(&ind_size, 1, 4, indfile);
+    ind_size = ind_size + strlen(curpath) +1;
+    b = ( strlen(curpath) & 0xff ) | 0x80;
+    fwrite(&b, 1, 1, indfile);
+    fwrite(curpath, 1, strlen(curpath), indfile);
+
+    if (n < 0)
+        perror("scan dir fail!\n");
+    else {
+        while (n--) {
+            if (strcmp(namelist[n]->d_name, ".") == 0)
+                continue;
+            if (strcmp(namelist[n]->d_name, "..") == 0)
+                continue;
+            size = strlen(namelist[n]->d_name);
+            if (namelist[n]->d_type == DT_DIR) {
+                //printf("(%d)%s/\n", size , namelist[n]->d_name);
+                b = ( size & 0xff ) | 0x80;
+                fwrite(&b, 1, 1, indfile);
+            } else {
+                //printf("(%d)%s\n", size , namelist[n]->d_name);
+                b = size & 0xff;
+                fwrite(&b, 1, 1, indfile);
+            }
+            fwrite(namelist[n]->d_name, 1, size, indfile);
+            ind_size = (ind_size + 1 + size);
+        }
+        fgetpos(indfile, &pos_end);
+        fsetpos(indfile, &pos_size);
+        fwrite(&ind_size, 1, 4, indfile);
+        fsetpos(indfile, &pos_end);
+        free(namelist);
+    }
+
 
     while ((ent = readdir(dirp))) {
         strcpy(fullpath, prefix);
         strcat(fullpath, "/");
         strcat(fullpath, curpath);
         strcat(fullpath, ent->d_name);
-
-        strcpy(romfspath, curpath);
-        strcat(romfspath, ent->d_name);
 #ifdef _WIN32
         if (GetFileAttributes(fullpath) & FILE_ATTRIBUTE_DIRECTORY) {
 #else
@@ -121,10 +177,6 @@ void createind (DIR * dirp, const char * curpath,const char * prefix,FILE * indf
             createind(rec_dirp, fullpath + strlen(prefix) + 1, prefix,indfile);
             closedir(rec_dirp);
         } else {
-            strcpy(indpath, prefix);
-            strcat(indpath, "/INDEX");
-            if( strcmp(fullpath,indpath) != 0 )
-                fprintf(indfile,"%s\n",romfspath);
         }
     }
 
@@ -173,10 +225,10 @@ int main(int argc, char ** argv) {
         perror("opening directory");
         exit(-1);
     }
-    char indpath[strlen(dirname)+7];
-    strcpy(indpath, dirname);
-    strcat(indpath, "/INDEX");
-    indfile=fopen(indpath, "w");
+    char indpath[strlen(outname)+5];
+    strcpy(indpath, outname);
+    strcat(indpath, ".idx");
+    indfile=fopen(indpath, "wb");
 
     if (!indfile) {
         perror("create INDEX fail");

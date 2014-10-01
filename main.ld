@@ -14,9 +14,11 @@ SECTIONS
  		*(.text)
  		*(.text.*)
 		*(.rodata)
+		_sromind = .;
 		_sromfs = .;
-                *(.romfs.*)
+		        *(.romfsind.*)
 		_eromfs = .;
+                *(.romfs.*)
 		_sidata = .;
 	} >FLASH
 
