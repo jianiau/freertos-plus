@@ -13,7 +13,7 @@
 
 extern const unsigned char _sromfs;
 extern const unsigned char _sromind;
-static uint32_t pwd_hash=0x00001505; // /romfs
+extern uint32_t pwd_hash; // /romfs
 
 typedef struct {
 	const char *name;
@@ -36,6 +36,7 @@ void cd_command(int, char **);
 
 int pwd (uint32_t hash, char *buf);
 int ls (uint32_t hash);
+int get_full_path (char *path, char *buf);
 
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
@@ -136,12 +137,15 @@ void ps_command(int n, char *argv[]){
 }
 
 void cat_command(int n, char *argv[]){
+	char buf[256]="/romfs/";
+	char buf2[256]={0};
 	if(n==1){
 		fio_printf(2, "\r\nUsage: cat <filename>\r\n");
 		return;
 	}
-
-	if(!filedump(argv[1]))
+	get_full_path (argv[1],buf2);
+	strcat(buf,buf2);
+	if(!filedump(buf))
 		fio_printf(2, "\r\n%s no such file or directory.\r\n", argv[1]);
 }
 
@@ -192,7 +196,8 @@ void test_command(int n, char *argv[]) {
 
 	if (host_action(SYS_SYSTEM, "mkdir -p output")) {
 		fio_printf(1, "mkdir error!\n\r");
-        return;
+		// this function will fail in gdb mode
+        //return;
 	}
     handle = host_action(SYS_OPEN, "output/syslog", 8);
     if(handle == -1) {
@@ -237,18 +242,21 @@ void pwd_command(int n, char *argv[]){
 void cd_command(int n, char *argv[]){
     const uint8_t * file;
     char buf[256]={0};
-    uint32_t hash;
+    uint32_t hash,leng;
     fio_printf(1, "\r\n");
-    if (pwd(pwd_hash,buf)) {
-        sprintf(buf,"%s/%s/",buf,argv[1]);
-    } else {
-        sprintf(buf,"%s/",argv[1]);
+    leng=get_full_path (argv[1],buf);
+    if (leng) {
+		buf[leng]='/';
+		buf[leng+1]='\0';
     }
-    hash = hash_djb2((const uint8_t *) buf, -1);
-    file =romfs_get_file_by_hash(&_sromind, hash, NULL);
+
+	hash = hash_djb2((const uint8_t *) buf, -1);
+	file =romfs_get_file_by_hash(&_sromind, hash, NULL);
     if (file) {
         pwd_hash=hash;
     } else {
         fio_printf(2, "%s no directory.\r\n", argv[1]);
     }
+
+	return;
 }

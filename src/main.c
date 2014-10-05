@@ -21,7 +21,7 @@
  * it contains file system structure of test_romfs directory
  */
 extern const unsigned char _sromfs;
-
+extern uint32_t pwd_hash; // /romfs
 //static void setup_hardware();
 
 volatile xSemaphoreHandle serial_tx_wait_sem = NULL;
@@ -160,7 +160,7 @@ int main()
 	fio_init();
 	
 	register_romfs("romfs", &_sromfs);
-	
+	pwd_hash=0x00001505;
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */
 	vSemaphoreCreateBinary(serial_tx_wait_sem);

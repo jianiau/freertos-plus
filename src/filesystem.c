@@ -22,7 +22,7 @@ __attribute__((constructor)) void fs_init() {
 
 int register_fs(const char * mountpoint, fs_open_t callback, void * opaque) {
     int i;
-    DBGOUT("register_fs(\"%s\", %p, %p)\r\n", mountpoint, callback, opaque);
+    //DBGOUT("register_fs(\"%s\", %p, %p)\r\n", mountpoint, callback, opaque);
     
     for (i = 0; i < MAX_FS; i++) {
         if (!fss[i].cb) {

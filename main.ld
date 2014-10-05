@@ -27,7 +27,8 @@ SECTIONS
     {
 		_sdata = .;
 		*(.data)		/* Initialized data */
-		_edata = .;
+		pwd_hash = .;
+		_edata = .;		
 	} >RAM
 
 	.bss : {
@@ -38,3 +39,4 @@ SECTIONS
     
     _estack = ORIGIN(RAM) + LENGTH(RAM);
  }  
+
