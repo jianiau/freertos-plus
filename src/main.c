@@ -12,7 +12,7 @@
 #include "filesystem.h"
 #include "fio.h"
 #include "romfs.h"
-
+#include "hash-djb2.h"
 #include "clib.h"
 #include "shell.h"
 #include "host.h"
@@ -160,7 +160,7 @@ int main()
 	fio_init();
 	
 	register_romfs("romfs", &_sromfs);
-	pwd_hash=0x00001505;
+	pwd_hash=hash_djb2((const uint8_t *)&"",-1); // init pwd to /romfs/
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */
 	vSemaphoreCreateBinary(serial_tx_wait_sem);
