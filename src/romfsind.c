@@ -107,20 +107,9 @@ int get_full_path (char *path, char *buf) {
             if (dst_p<0) {
                 // parent is root
                 buf[0]='\0';
-                break;
+                dst_p=0;
             }
-            if (path[src_p+2]=='/') {
-                if (path[src_p+3]=='\0') {
-                    // path = *../
-                    break;
-                } else {
-                    // path = *../*
-                    src_p+=2;
-                }
-            } else {
-                // path = *..
-                break;
-            }
+            src_p+=2;
         }
         buf[dst_p++]=path[src_p++];
     }
