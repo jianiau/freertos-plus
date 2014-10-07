@@ -37,7 +37,8 @@ void cd_command(int, char **);
 int pwd (uint32_t hash, char *buf);
 int ls (uint32_t hash);
 int get_full_path (char *path, char *buf);
-
+int sum (int num);
+int sum_loop (int num);
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
 cmdlist cl[]={
@@ -193,7 +194,9 @@ void help_command(int n,char *argv[]){
 void test_command(int n, char *argv[]) {
     int handle;
     int error;
-
+    char buffer[128]={'\0'};
+    
+    fio_printf(1, "\r\n");
 	if (host_action(SYS_SYSTEM, "mkdir -p output")) {
 		fio_printf(1, "mkdir error!\n\r");
 		// this function will fail in gdb mode
@@ -204,10 +207,14 @@ void test_command(int n, char *argv[]) {
         fio_printf(1, "Open file error!\n\r");
         return;
     }
-//fio_printf(1, "clock=%u\r\n",host_action(SYS_TIME));
-    char *buffer = "Test host_write function which can write data to output/syslog\n";
-    error = host_action(SYS_WRITE, handle, (void *)buffer, strlen(buffer));
 
+//	fio_printf(1,"\r\nsum(5)=%d\r\n",sum(5));
+//	fio_printf(1,"sum(10)=%d\r\n",sum_loop(10));
+
+    sprintf(buffer,"sum(10)=%d\n",sum(10));
+    error = host_action(SYS_WRITE, handle, (void *)buffer, strlen(buffer));
+	sprintf(buffer,"sum_loop(10)=%d\n",sum_loop(10));
+    error = host_action(SYS_WRITE, handle, (void *)buffer, strlen(buffer));
     if(error != 0) {
         fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
         host_action(SYS_CLOSE, handle);
@@ -259,4 +266,23 @@ void cd_command(int n, char *argv[]){
     }
 
 	return;
+}
+
+int sum (int num) {
+	if (num<=0) {
+		return 0;
+	}
+	return num+sum(num-1);
+}
+
+int sum_loop (int num) {
+	int sum=0;
+	if (num<=0) {
+		return 0;
+	}
+	while (num) {
+		sum=sum+num;
+		num--;
+	}
+	return sum;
 }

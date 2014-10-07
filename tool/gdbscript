@@ -1,6 +1,70 @@
+# load file
 file build/main.elf
 target remote :3333
 
-b main
+shell mkdir -p output
+shell touch output/gdblog
+set logging file output/gdblog
+#set logging redirect on
+set logging on
+set remote system-call-allowed 1
+set pagination off
 
+b sum
+commands
+	info args
+	bt
+	info registers sp
+	c
+end
+
+b sum_loop
+commands
+	info args
+	watch sum
+	commands
+		info registers sp
+		c
+	end
+	c
+end
+
+b main
 c
+
+# break at fio_printf, the breakpoint will be deleted automatically
+tbreak 94
+c
+
+# "step" go into fio_printf
+step
+
+# change argv
+set format[21]='D'
+set format[22]='e'
+set format[23]='b'
+set format[24]='u'
+set format[25]='g'
+# "fin" run to the end of current function
+fin
+
+tbreak src/main.c:97
+c
+# change buf value
+set buf[0]='t'
+set buf[1]='e'
+set buf[2]='s'
+set buf[3]='t'
+set buf[4]='\0'
+
+# skip fio_read
+call fio_printf(1,buf)
+
+shell echo "Run test_command, and check sum()" >> output/gdblog
+jump 98
+c
+
+
+
+
+
