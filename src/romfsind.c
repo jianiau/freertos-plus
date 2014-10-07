@@ -19,7 +19,7 @@ int pwd (uint32_t hash, char *buf) {
     name_len = (uint8_t)file[0] & 0x7f;
     if (name_len) {
         strncpy(buf,(const char *)file+1,name_len-1);
-        buf[name_len]='\0';
+        buf[name_len-1]='\0';
         return 1;
     } else {
         buf[0]='\0';
