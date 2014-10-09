@@ -10,6 +10,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "host.h"
+#include "bufbomb.h"
 
 extern const unsigned char _sromfs;
 extern const unsigned char _sromind;
@@ -33,12 +34,13 @@ void mmtest_command(int, char **);
 void test_command(int, char **);
 void pwd_command(int, char **);
 void cd_command(int, char **);
-
 int pwd (uint32_t hash, char *buf);
 int ls (uint32_t hash);
 int get_full_path (char *path, char *buf);
 int sum (int num);
 int sum_loop (int num);
+void bufbomb_command(int, char **);
+
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
 cmdlist cl[]={
@@ -52,6 +54,7 @@ cmdlist cl[]={
 	MKCL(test, "test new function"),
 	MKCL(pwd, "print name of current/working directory"),
 	MKCL(cd, "change working directory"),
+	MKCL(bufbomb, "buffer overflow attack bomb")
 };
 
 int parse_command(char *str, char *argv[]){
@@ -195,7 +198,7 @@ void test_command(int n, char *argv[]) {
     int handle;
     int error;
     char buffer[128]={'\0'};
-    
+
     fio_printf(1, "\r\n");
 	if (host_action(SYS_SYSTEM, "mkdir -p output")) {
 		fio_printf(1, "mkdir error!\n\r");
@@ -222,6 +225,10 @@ void test_command(int n, char *argv[]) {
     }
 
     host_action(SYS_CLOSE, handle);
+}
+
+void bufbomb_command(int n, char *argv[]) {
+	bufbomb();
 }
 
 cmdfunc *do_command(const char *cmd){

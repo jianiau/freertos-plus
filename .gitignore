@@ -7,5 +7,8 @@ test-romfs.bin
 *.swp
 *~
 build
-outpu
 *.orig
+output
+cscope.out
+exploit.bytes
+exploit.str
