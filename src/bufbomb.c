@@ -18,8 +18,9 @@ static void put_hex(const char c)
 {
 	send_byte('0');
 	send_byte('x');
-	send_byte(((int)c / 16) + '0');
-	send_byte(((int)c % 16) + '0');
+	char digit[]="0123456789ABCDEF";
+	send_byte(digit[(int)c / 16]);
+	send_byte(digit[(int)c % 16]);
 }
 
 static char *_gets(char *str)
