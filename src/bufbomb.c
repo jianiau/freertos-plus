@@ -14,15 +14,6 @@ static void bufbomb_init(void)
 	cursor = 0;
 }
 
-static void put_hex(const char c)
-{
-	send_byte('0');
-	send_byte('x');
-	char digit[]="0123456789ABCDEF";
-	send_byte(digit[(int)c / 16]);
-	send_byte(digit[(int)c % 16]);
-}
-
 static char *_gets(char *str)
 {
 	char c;
@@ -34,7 +25,7 @@ static char *_gets(char *str)
 	fio_printf(1, "Your code: ");
 	while(c != '\n') {
 		*buf++ = c;
-		put_hex(c);
+		fio_printf(1, "0x%X",c);
 		send_byte(' ');
 		c = content[cursor++];
 	}

@@ -23,6 +23,9 @@ size_t fio_printf(int fd, const char *format, ...) {
             case 'X':
                 tmpint = va_arg(v1, int);
                 tmpcharp = utoa(format[i+1]=='x'?"0123456789abcdef":"0123456789ABCDEF",(unsigned)tmpint, 16);
+                if (strlen(tmpcharp)%2) {
+                    fio_write(fd, "0", 1);
+                }
                 fio_write(fd, tmpcharp, strlen(tmpcharp));
                 break;
             case 'u':
@@ -66,15 +69,23 @@ int sprintf(char *dest, const char *format, ...) {
             case '%':
                 dest[p++]='%';
                 break;
-            case 'd':
             case 'x':
             case 'X':
+                tmpint = va_arg(v1, int);
+                tmpcharp = utoa(format[i+1]=='x'?"0123456789abcdef":"0123456789ABCDEF",(unsigned)tmpint, 16);
+                if (strlen(tmpcharp)%2) {
+                    dest[p++]='0';
+                }
+                for(; *tmpcharp; ++tmpcharp, ++p)
+                    dest[p]=*tmpcharp;
+                break;
+            case 'd':
             case 'u':
                 tmpint = va_arg(v1, int);
                 if(format[i+1]=='u')
-                    tmpcharp = utoa(format[i+1]=='X'?"0123456789ABCDEF":"0123456789abcdef" ,(unsigned)tmpint, 10);
+                    tmpcharp = utoa("0123456789",(unsigned)tmpint, 10);
                 else
-                    tmpcharp = itoa(format[i+1]=='X'?"0123456789ABCDEF":"0123456789abcdef", tmpint, format[i+1]=='d'?10: 16);
+                    tmpcharp = itoa("0123456789",(unsigned)tmpint, 10);
                 for(; *tmpcharp; ++tmpcharp, ++p)
                     dest[p]=*tmpcharp;
                 break;
